@@ -33,7 +33,8 @@ Pokoje, w których nie ma użytkowników, zostają automatycznie usuwane.
 ## Struktura bazy danych
 
 ### Schemat
-![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+
+![Image Alt Text](assets/Untitled.png)
 
 ### Tabele
 **ROOMS**
