@@ -190,14 +190,6 @@ ALTER TABLE ONLY public.rooms_messages
 
 
 
-Przykładowe dane:
-|user_id|username|password|rooms|messages|
-|-------|--------|--------|-----|--------|
-|-------|--------|--------|-----|--------|
-|-------|--------|--------|-----|--------|
-|-------|--------|--------|-----|--------|
-
-
 
 
 **ROOMS_USERS**
@@ -234,16 +226,6 @@ ALTER TABLE ONLY public.rooms_users
 ALTER TABLE ONLY public.rooms_users
     ADD CONSTRAINT fkonfvsoo49ldsby39eibxeg7a3 FOREIGN KEY (users_user_id) REFERENCES public.users(user_id);
 ```
-
-
-
-
-Przykładowe dane:
-|user_id|username|password|rooms|messages|
-|-------|--------|--------|-----|--------|
-|-------|--------|--------|-----|--------|
-|-------|--------|--------|-----|--------|
-|-------|--------|--------|-----|--------|
 
 ## Serwer
 
