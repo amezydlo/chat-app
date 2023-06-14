@@ -408,61 +408,63 @@ W implementacji API uwzględnione zostały następujące endpointy:
     @RequestMapping("/api/rooms")
     @RequiredArgsConstructor
     public class RoomController {
-    private final RoomService roomService;
-    private final UserService userService;
+        private final RoomService roomService;
+        private final UserService userService;
 
-    record RoomCreateRequest(
-            User creator,
-            String name,
-            int capacity,
-            String password
-    ) {
-    }
-
-    record JoinRequest(
-            User user,
-            String password
-    ) {
-    }
-
-    
-    @PostMapping("/create")
-    public Room.RoomResponse createRoom(@RequestBody RoomCreateRequest req) {
-        Room newRoom = new Room(req.name, req.capacity, req.password);
-        User user = userService.getUserByUsername(req.creator.getUsername());
-        newRoom.addUser(user, req.password);
-        return roomService.saveRoom(newRoom).convertToResponse();
-    }
-
-    @GetMapping("/{id}")
-    public Room.RoomResponse getRoomById(@PathVariable Integer id) {
-        return roomService.getRoomById(id).convertToResponse();
-    }
-
-    @PostMapping("/{id}/join")
-    @Transactional
-    public Room.RoomResponse joinRoom(@RequestBody JoinRequest req, @PathVariable Integer id) {
-        Room room = roomService.getRoomById(id);
-        User user = userService.getUserByUsername(req.user.getUsername());
-        if (user.joinRoom(room, req.password)) {
-            return roomService.saveRoom(room).convertToResponse();
-        } else {
-            return null;
+        // TODO move somewhere else
+        record RoomCreateRequest(
+                User creator,
+                String name,
+                int capacity,
+                String password
+        ) {
         }
-    }
 
-    @PostMapping("/{id}/leave")
-    @Transactional
-    public String leaveRoom(@RequestBody User passedUser, @PathVariable int id) {
-        Room room = roomService.getRoomById(id);
-        User user = userService.getUserByUsername(passedUser.getUsername());
-        if (user.leaveRoom(room)) {
-            if (room.noCurrentUsers() == 0) {
-                roomService.deleteRoom(id);
+        record JoinRequest(
+                User user,
+                String password
+        ) {
+        }
+
+        // TODO move room instance creation to RoomService
+        @PostMapping("/create")
+        public Room.RoomResponse createRoom(@RequestBody RoomCreateRequest req) {
+            Room newRoom = new Room(req.name, req.capacity, req.password);
+            User user = userService.getUserByUsername(req.creator.getUsername());
+            newRoom.addUser(user, req.password);
+            return roomService.saveRoom(newRoom).convertToResponse();
+        }
+
+        @GetMapping("/{id}")
+        public Room.RoomResponse getRoomById(@PathVariable Integer id) {
+            return roomService.getRoomById(id).convertToResponse();
+        }
+
+        // what is this supposed to return??????
+        @PostMapping("/{id}/join")
+        @Transactional
+        public Room.RoomResponse joinRoom(@RequestBody JoinRequest req, @PathVariable Integer id) {
+            Room room = roomService.getRoomById(id);
+            User user = userService.getUserByUsername(req.user.getUsername());
+            if (user.joinRoom(room, req.password)) {
+                return roomService.saveRoom(room).convertToResponse();
+            } else {
+                return null;
             }
-            return "You have left the room";
         }
-        return "Could not leave the room";
+
+        @PostMapping("/{id}/leave")
+        @Transactional
+        public String leaveRoom(@RequestBody User.UserResponse passedUser, @PathVariable int id) {
+            Room room = roomService.getRoomById(id);
+            User user = userService.getUserByUsername(passedUser.username());
+            if (user.leaveRoom(room)) {
+                if (room.noCurrentUsers() == 0) {
+                    roomService.deleteRoom(id);
+                }
+                return "You have left the room";
+            }
+            return "Could not leave the room";
         }
     }
   ```
@@ -473,8 +475,6 @@ W implementacji API uwzględnione zostały następujące endpointy:
 
 
 - **UserController**
-  - GET       /api/users              - pobieranie z bazy danych listę wszystkich użytkowników
-  - GET       /api/users/{username}   - pobieranie użytkownika z bazy danych po `username`
   - POST      /api/users/register     - utworzenie nowego konta użytkownika i zapisanie go do bazy danych
   - POST      /api/users/login        - pobranie obiektu użytkownika jeśli hasło się zgadza z zapisanym w bazie
   - DELETE    /api/users/delete       - usunięcie użytkownika, szczegóły należy podać w ciele żądania
@@ -488,46 +488,55 @@ W implementacji API uwzględnione zostały następujące endpointy:
         private final UserService userService;
 
 
-        record UserRequest(
-            String username,
-            String password
-        ) {
-        }
-
-        // GET
+    // GET
         @GetMapping
-        public List<User> getAllUsers() {
-            return userService.getAllUsers();
+        public List<User.UserResponse> getAllUsers() {
+            return userService.getAllUsers().stream().map(User::convertToResponse).collect(Collectors.toList());
         }
 
 
         @GetMapping("/{username}")
-        public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+        public ResponseEntity<User.UserResponse> getUserByUsername(@PathVariable String username) {
             User user = userService.getUserByUsername(username);
-            return createResponse(user);
+            if (user == null) {
+                return createResponse(null);
+            }
+            return createResponse(user.convertToResponse());
         }
 
         // POST
 
+
+        // TODO move to separate class
+        record UserRequest(
+                String username,
+                String password
+        ) {
+        }
+
+
         @PostMapping("/register")
-        public ResponseEntity<User> register(@RequestBody UserRequest request) {
+        public ResponseEntity<User.UserResponse> register(@RequestBody UserRequest request) {
             User user = userService.saveUser(request.username(), request.password());
-            return createResponse(user);
+            return createResponse(user.convertToResponse());
         }
 
 
         @PostMapping("/login")
-        public ResponseEntity<User> login(@RequestBody UserRequest request) {
+        public ResponseEntity<User.UserResponse> login(@RequestBody UserRequest request) {
             User user = userService.authenticateUser(request.username(), request.password());
-            return createResponse(user);
+            if (user == null) {
+                return createResponse(null);
+            }
+            return createResponse(user.convertToResponse());
         }
 
 
         // DELETE User knows their id which is returned in User object
         @DeleteMapping("/delete")
-        public ResponseEntity<String> deleteAccount(@RequestBody User request) {
+        public ResponseEntity<String> deleteAccount(@RequestBody User.UserResponse request) {
 
-            String deletedUser = userService.removeUser(request.getUsername());
+            String deletedUser = userService.removeUser(request.username());
             if (deletedUser == null) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
