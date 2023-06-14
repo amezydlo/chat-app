@@ -47,8 +47,7 @@ Opis kolumn:
 |name           |nazwa pokoju                                          |
 |capacity       |maksymalna liczba osób w pokoju                       |
 |password       |prywatne hasło dające dostęp do pokoju                |
-|users  **FK**  |klucz obcy do tabeli łączącej pokoje z użytkownikami  |
-|messages **FK**|klucz obcy do tabeli łączącej pokoje z wiadomościami  |
+
 
 
 DDL:
@@ -90,7 +89,6 @@ Opis kolumn:
 |user_id **PK** |automatycznie wygenerowane **ID** użytkownika         | 
 |username       |nazwa użytkownika (*nick*)                            |
 |password       |hasło do konta użytkownika                            |
-|rooms **FK**   |klucz obcy do tabeli łączącej użytkowników z pokojami |
 
 
 
@@ -140,7 +138,7 @@ Opis kolumn:
 |message_id **PK** |automatycznie wygenerowane **ID** wiadomości          | 
 |content           |treść wiadomości                                      |
 |sent_date         |data wysłania wiadomości                              |
-|state             |stan wysłania (*ERROR*, *PENDING*, *SENT*, *RECEIVED*) |
+|sender            |nick nadawcy                                          |
 
 DDL:
 
