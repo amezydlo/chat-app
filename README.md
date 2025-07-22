@@ -3,7 +3,10 @@
 
 Celem aplikacji jest dostarczenie użytkownikom czatu z podziałem na pokoje, który będzie dostępny z poziomu przeglądarki poprzez stworzone w tym celu API.
 
-
+# Project for Databases II at AGH UST
+> [!Note]
+> Project has been archived.
+> Reason: No longer maintained university project.
 
 
 ## Autorzy
